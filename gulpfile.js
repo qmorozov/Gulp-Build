@@ -20,6 +20,7 @@ const htmlminify = require("gulp-html-minify");
 const gulpStylelint = require('gulp-stylelint');
 const concat = require('gulp-concat');
 const cssmin = require('gulp-cssmin');
+const webp = require('gulp-webp');
 
 // === FONTS from TTF to WOFF / WOFF2 ===
 const fonts = () => {
@@ -47,7 +48,7 @@ const styles = () => {
             suffix: '.min'
         }))
         .pipe(autoprefixer({
-            cascade: false,
+            overrideBrowserslist: ['last 8 version']
         }))
         .pipe(cleanCSS({
             level: 2
@@ -62,8 +63,7 @@ const styles = () => {
 // === PLUG IN LIBS CSS ===
 const styleLibs = () => {
     return src([
-            'node_modules/normalize.css/normalize.css',
-            'node_modules/swiper/swiper-bundle.min.css'
+        'node_modules/normalize.css/normalize.css',
         ])
         .pipe(concat('libs.min.css'))
         .pipe(cssmin())
@@ -73,8 +73,7 @@ const styleLibs = () => {
 // === PLUG IN LIBS JS ===
 const scriptLibs = () => {
     return src([
-            'node_modules/swiper/swiper-bundle.min.js',
-            'node_modules/lazysizes/lazysizes.min.js'
+        'node_modules/lazysizes/lazysizes.min.js',        
         ])
         .pipe(concat('libs.min.js'))
         .pipe(uglify().on("error", notify.onError()))
@@ -82,7 +81,7 @@ const scriptLibs = () => {
 }
 
 const htmlInclude = () => {
-    return src(['./src/index.html'])
+    return src(['./src/*.html'])
         .pipe(fileinclude({
             prefix: '@',
             basepath: '@file'
@@ -95,6 +94,8 @@ const htmlInclude = () => {
 // === MOVE PHOTOS TO THE APP FOLDER ===
 const imgToApp = () => {
     return src('./src/images/*/**.*')
+        // === IMG TO WEBP ===
+        .pipe(webp())
         .pipe(dest('./app/images'))
 }
 
@@ -113,30 +114,8 @@ const clean = () => {
 // === MINIFY OF ALL JS FILES ===
 const scripts = () => {
     return src('./src/js/main.js')
-        .pipe(webpackStream({
-            mode: 'development',
-            output: {
-                filename: 'main.js',
-            },
-            module: {
-                rules: [{
-                    test: /\.m?js$/,
-                    exclude: /(node_modules|bower_components)/,
-                    use: {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: ['@babel/preset-env']
-                        }
-                    }
-                }]
-            },
-        }))
-        .on('error', function(err) {
-            console.error('WEBPACK ERROR', err);
-            this.emit('end');
-        })
         .pipe(sourcemaps.init())
-        .pipe(uglify().on("error", notify.onError()))
+        .pipe(uglify())
         .pipe(sourcemaps.write('.'))
         .pipe(dest('./app/js'))
         .pipe(browserSync.stream());
@@ -165,7 +144,6 @@ exports.watchFiles = watchFiles;
 exports.fileinclude = htmlInclude;
 
 exports.default = series(clean, parallel(htmlFiles, htmlInclude, scripts, styleLibs, scriptLibs, fonts, imgToApp), styles, watchFiles);
-
 // === BUILD PROJECT ===
 
 // === COMPRESION ALL IMAGES ===
