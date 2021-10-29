@@ -10,6 +10,7 @@
 - source map to display in browser, from which scss piece of css is taken
 - converting fonts from ttf to woff and woff2;
 - image compression;
+- jpg, png to webp;
 ---
 To start the build it is worthwhile writing in the console 'gulp'
 ---
